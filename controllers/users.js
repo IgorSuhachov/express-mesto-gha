@@ -5,6 +5,8 @@ const BAD_REQUEST = 400;
 const NOT_FOUND = 404;
 const INTERNAL_SERVER_ERROR = 500;
 
+const { CastError, ValidationError, DocumentNotFoundError } = mongoose.Error;
+
 const getUser = (req, res) => {
   User.find({})
     .then((users) => res.send(users))
@@ -16,10 +18,10 @@ const getUserById = (req, res) => {
     .orFail()
     .then((user) => res.send(user))
     .catch((err) => {
-      if (err instanceof mongoose.Error.CastError) {
+      if (err instanceof CastError) {
         return res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные при получении пользователя.' });
       }
-      if (err instanceof mongoose.Error.DocumentNotFoundError) {
+      if (err instanceof DocumentNotFoundError) {
         return res.status(NOT_FOUND).send({ message: 'Пользователь по указанному _id не найден.' });
       }
       return res.status(INTERNAL_SERVER_ERROR).send({ message: 'Ошибка по умолчанию.' });
@@ -32,7 +34,7 @@ const createUser = (req, res) => {
   User.create({ name, about, avatar })
     .then((user) => res.status(201).send(user))
     .catch((err) => {
-      if (err instanceof mongoose.Error.ValidationError) {
+      if (err instanceof ValidationError) {
         return res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные при создании пользователя.' });
       }
       return res.status(INTERNAL_SERVER_ERROR).send({ message: 'Ошибка по умолчанию.' });
@@ -46,10 +48,10 @@ const updateProfile = (req, res) => {
     .orFail()
     .then((user) => res.send(user))
     .catch((err) => {
-      if (err instanceof mongoose.Error.CastError || err instanceof mongoose.Error.ValidationError) {
+      if (err instanceof CastError || err instanceof ValidationError) {
         return res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные при обновлении профиля.' });
       }
-      if (err instanceof mongoose.Error.DocumentNotFoundError) {
+      if (err instanceof DocumentNotFoundError) {
         return res.status(NOT_FOUND).send({ message: 'Пользователь с указанным _id не найден. ' });
       }
       return res.status(INTERNAL_SERVER_ERROR).send({ message: 'Ошибка по умолчанию.' });
@@ -61,10 +63,10 @@ const updateAvatar = (req, res) => {
   User.findByIdAndUpdate(req.user._id, { avatar }, { new: true })
     .then((user) => res.send(user))
     .catch((err) => {
-      if (err instanceof mongoose.Error.CastError) {
+      if (err instanceof CastError) {
         return res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные при обновлении аватара' });
       }
-      if (err instanceof mongoose.Error.DocumentNotFoundError) {
+      if (err instanceof DocumentNotFoundError) {
         return res.status(NOT_FOUND).send({ message: 'Пользователь с указанным _id не найден.' });
       }
       return res.status(INTERNAL_SERVER_ERROR).send({ message: 'Ошибка по умолчанию.' });

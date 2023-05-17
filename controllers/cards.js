@@ -5,6 +5,8 @@ const BAD_REQUEST = 400;
 const NOT_FOUND = 404;
 const INTERNAL_SERVER_ERROR = 500;
 
+const { CastError, ValidationError, DocumentNotFoundError } = mongoose.Error;
+
 const getCard = (req, res) => {
   Cards.find({})
     .then((cards) => res.send(cards))
@@ -17,7 +19,7 @@ const createCard = (req, res) => {
   Cards.create({ name, link, owner })
     .then((card) => res.status(201).send(card))
     .catch((err) => {
-      if (err instanceof mongoose.Error.ValidationError) {
+      if (err instanceof ValidationError) {
         return res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные при создании карточки.' });
       }
       return res.status(INTERNAL_SERVER_ERROR).send({ message: 'Ошибка по умолчанию.' });
@@ -29,10 +31,10 @@ const deleteCard = (req, res) => {
     .orFail()
     .then((card) => res.send(card))
     .catch((err) => {
-      if (err instanceof mongoose.Error.CastError) {
+      if (err instanceof CastError) {
         return res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные для удалении карточки.' });
       }
-      if (err instanceof mongoose.Error.DocumentNotFoundError) {
+      if (err instanceof DocumentNotFoundError) {
         return res.status(NOT_FOUND).send({ message: 'Карточка с указанным _id не найдена.' });
       }
       return res.status(INTERNAL_SERVER_ERROR).send({ message: 'Ошибка по умолчанию.' });
@@ -44,10 +46,10 @@ const setLike = (req, res) => {
     .orFail()
     .then((card) => res.send(card))
     .catch((err) => {
-      if (err instanceof mongoose.Error.CastError) {
+      if (err instanceof CastError) {
         return res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные для постановки/снятии лайка.' });
       }
-      if (err instanceof mongoose.Error.DocumentNotFoundError) {
+      if (err instanceof DocumentNotFoundError) {
         return res.status(NOT_FOUND).send({ message: 'Передан несуществующий _id карточки.' });
       }
       return res.status(INTERNAL_SERVER_ERROR).send({ message: 'Ошибка по умолчанию.' });
@@ -58,10 +60,10 @@ const removeLike = (req, res) => {
     .orFail()
     .then((card) => res.send(card))
     .catch((err) => {
-      if (err instanceof mongoose.Error.CastError) {
+      if (err instanceof CastError) {
         return res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные для постановки/снятии лайка. ' });
       }
-      if (err instanceof mongoose.Error.DocumentNotFoundError) {
+      if (err instanceof DocumentNotFoundError) {
         return res.status(NOT_FOUND).send({ message: 'Передан несуществующий _id карточки.' });
       }
       return res.status(INTERNAL_SERVER_ERROR).send({ message: 'Ошибка по умолчанию.' });
