@@ -13,8 +13,12 @@ const getUser = (req, res) => {
 
 const getUserById = (req, res) => {
   User.findById(req.params.userId)
+    .orFail()
     .then((user) => res.send(user))
     .catch((err) => {
+      if (err instanceof mongoose.Error.CastError) {
+        return res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные при получении пользователя.' });
+      }
       if (err instanceof mongoose.Error.DocumentNotFoundError) {
         return res.status(NOT_FOUND).send({ message: 'Пользователь по указанному _id не найден.' });
       }
@@ -28,7 +32,7 @@ const createUser = (req, res) => {
   User.create({ name, about, avatar })
     .then((user) => res.status(201).send(user))
     .catch((err) => {
-      if (err instanceof mongoose.Error.CastError) {
+      if (err instanceof mongoose.Error.ValidationError) {
         return res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные при создании пользователя.' });
       }
       return res.status(INTERNAL_SERVER_ERROR).send({ message: 'Ошибка по умолчанию.' });
@@ -38,7 +42,8 @@ const createUser = (req, res) => {
 const updateProfile = (req, res) => {
   const { name, about } = req.body;
 
-  User.findByIdAndUpdate(req.user._id, { name, about })
+  User.findByIdAndUpdate(req.user._id, { name, about }, { new: true })
+    .orFail()
     .then((user) => res.send(user))
     .catch((err) => {
       if (err instanceof mongoose.Error.CastError) {
@@ -53,7 +58,7 @@ const updateProfile = (req, res) => {
 
 const updateAvatar = (req, res) => {
   const { avatar } = req.body;
-  User.findByIdAndUpdate(req.user._id, { avatar })
+  User.findByIdAndUpdate(req.user._id, { avatar }, { new: true })
     .then((user) => res.send(user))
     .catch((err) => {
       if (err instanceof mongoose.Error.CastError) {
