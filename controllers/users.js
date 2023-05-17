@@ -46,7 +46,7 @@ const updateProfile = (req, res) => {
     .orFail()
     .then((user) => res.send(user))
     .catch((err) => {
-      if (err instanceof mongoose.Error.CastError) {
+      if (err instanceof mongoose.Error.CastError || err instanceof mongoose.Error.ValidationError) {
         return res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные при обновлении профиля.' });
       }
       if (err instanceof mongoose.Error.DocumentNotFoundError) {
