@@ -60,10 +60,10 @@ const updateProfile = (req, res) => {
 
 const updateAvatar = (req, res) => {
   const { avatar } = req.body;
-  User.findByIdAndUpdate(req.user._id, { avatar }, { new: true })
+  User.findByIdAndUpdate(req.user._id, { avatar }, { new: true, runValidators: true })
     .then((user) => res.send(user))
     .catch((err) => {
-      if (err instanceof CastError) {
+      if (err instanceof CastError || err instanceof ValidationError) {
         return res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные при обновлении аватара' });
       }
       if (err instanceof DocumentNotFoundError) {
