@@ -26,9 +26,13 @@ const createCard = (req, res) => {
 
 const deleteCard = (req, res) => {
   Cards.findByIdAndRemove(req.params.cardId)
+    .orFail()
     .then((card) => res.send(card))
     .catch((err) => {
       if (err instanceof mongoose.Error.CastError) {
+        return res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные для удалении карточки.' });
+      }
+      if (err instanceof mongoose.Error.DocumentNotFoundError) {
         return res.status(NOT_FOUND).send({ message: 'Карточка с указанным _id не найдена.' });
       }
       return res.status(INTERNAL_SERVER_ERROR).send({ message: 'Ошибка по умолчанию.' });
