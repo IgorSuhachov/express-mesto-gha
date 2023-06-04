@@ -1,4 +1,7 @@
 const mongoose = require('mongoose');
+const validator = require('validator');
+
+const urlRegExp = /^(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/i;
 
 const cardSchema = new mongoose.Schema({
   name: {
@@ -10,6 +13,10 @@ const cardSchema = new mongoose.Schema({
   link: {
     type: String,
     required: true,
+    validate: {
+      validator: (value) => urlRegExp.test(value),
+      message: 'Invalid link',
+    },
   },
   owner: {
     type: mongoose.Schema.Types.ObjectId,

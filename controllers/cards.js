@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const Cards = require('../models/card');
 
 const BAD_REQUEST = 400;
+const FORBIDDEN = 403;
 const NOT_FOUND = 404;
 const INTERNAL_SERVER_ERROR = 500;
 
@@ -15,7 +16,8 @@ const getCard = (req, res) => {
 
 const createCard = (req, res) => {
   const { name, link } = req.body;
-  const owner = req.user._id;
+  const owner = req.user;
+  console.log(owner);
   Cards.create({ name, link, owner })
     .then((card) => res.status(201).send(card))
     .catch((err) => {

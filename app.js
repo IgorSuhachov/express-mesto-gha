@@ -1,19 +1,14 @@
 const express = require('express');
+const { errors } = require('celebrate');
 const mongoose = require('mongoose');
+const cookieParser = require('cookie-parser');
 const router = require('./routes');
 
 const { PORT = 3000 } = process.env;
 
 const app = express();
 app.use(express.json());
-
-app.use((req, res, next) => {
-  req.user = {
-    _id: '6462e0af9805ac392811d2a5',
-  };
-
-  next();
-});
+app.use(cookieParser());
 
 app.use(router);
 
@@ -25,6 +20,7 @@ mongoose
   .catch((err) => {
     console.log(err);
   });
+app.use(errors());
 
 app.listen(PORT, () => {
   console.log(`Сервер запущен на ${PORT} порту`);
