@@ -1,8 +1,6 @@
 const mongoose = require('mongoose');
 const validator = require('validator');
 
-const urlRegExp = /^(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/i;
-
 const userSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -19,7 +17,7 @@ const userSchema = new mongoose.Schema({
   avatar: {
     type: String,
     validate: {
-      validator: (value) => urlRegExp.test(value),
+      validator: (value) => validator.isURL(value, { require_protocol: true }),
       message: 'Invalid link',
     },
     default: 'https://pictures.s3.yandex.net/resources/jacques-cousteau_1604399756.png',

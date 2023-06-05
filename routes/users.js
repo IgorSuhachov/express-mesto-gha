@@ -7,7 +7,6 @@ const { authorization } = require('../middlewares/auth');
 router.get('/', authorization, getUser);
 router.get('/me', authorization, getMe);
 router.get('/:userId', authorization, getUserById);
-router.post('/', createUser);
 router.post('/signin', login);
 router.post(
   '/signup',

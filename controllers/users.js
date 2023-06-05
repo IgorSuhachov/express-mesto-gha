@@ -3,50 +3,49 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 
-const BAD_REQUEST = 400;
-const UNAUTHORIZED = 401;
-const NOT_FOUND = 404;
-const CONFLICT = 409;
-const INTERNAL_SERVER_ERROR = 500;
+const BadRequest = require('../errors/BadRequest');
+const Unauthorized = require('../errors/Unauthorized');
+const NotFound = require('../errors/NotFound');
+const InternalServerError = require('../errors/InternalServerError');
 
 const lifetime = 7 * 24 * 60 * 60 * 1000;
 
 const { CastError, ValidationError, DocumentNotFoundError } = mongoose.Error;
 
-const getUser = (req, res) => {
+const getUser = (req, res, next) => {
   User.find({})
     .then((users) => res.send(users))
-    .catch(() => res.status(INTERNAL_SERVER_ERROR).send({ message: 'Ошибка по умолчанию.' }));
+    .catch(() => next(new InternalServerError('Ошибка по умолчанию.')));
 };
-const getMe = (req, res) => {
+const getMe = (req, res, next) => {
   const userId = req.user._id;
   User.findOne({ _id: userId })
     .then((user) => {
       if (user) {
         res.send(user);
       } else {
-        res.send(NOT_FOUND).send({ message: 'Пользователь не найден' });
+        next(new NotFound('Пользователь не найден'));
       }
     })
-    .catch(() => res.status(INTERNAL_SERVER_ERROR).send({ message: 'Ошибка по умолчанию.' }));
+    .catch(() => next(new InternalServerError('Ошибка по умолчанию.')));
 };
 
-const getUserById = (req, res) => {
+const getUserById = (req, res, next) => {
   User.findById(req.params.userId)
     .orFail()
     .then((user) => res.send(user))
     .catch((err) => {
       if (err instanceof CastError) {
-        return res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные при получении пользователя.' });
+        next(new BadRequest('Переданы некорректные данные при получении пользователя.'));
       }
       if (err instanceof DocumentNotFoundError) {
-        return res.status(NOT_FOUND).send({ message: 'Пользователь по указанному _id не найден.' });
+        next(new NotFound('Пользователь по указанному _id не найден.'));
       }
-      return res.status(INTERNAL_SERVER_ERROR).send({ message: 'Ошибка по умолчанию.' });
+      next(new InternalServerError('Ошибка по умолчанию.'));
     });
 };
 
-const createUser = (req, res) => {
+const createUser = (req, res, next) => {
   const { name, about, avatar, password, email } = req.body;
 
   bcrypt.hash(password, 10).then((hash) => {
@@ -63,14 +62,14 @@ const createUser = (req, res) => {
       })
       .catch((err) => {
         if (err instanceof ValidationError) {
-          return res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные при создании пользователя.' });
+          next(new BadRequest('Переданы некорректные данные при создании пользователя.'));
         }
-        return res.status(INTERNAL_SERVER_ERROR).send({ message: 'Ошибка по умолчанию.' });
+        next(new InternalServerError('Ошибка по умолчанию.'));
       });
   });
 };
 
-const login = (req, res) => {
+const login = (req, res, next) => {
   const { email, password } = req.body;
 
   User.findOne({ email })
@@ -99,11 +98,11 @@ const login = (req, res) => {
         });
     })
     .catch((err) => {
-      res.status(UNAUTHORIZED).send(err.message);
+      next(new Unauthorized(err.message));
     });
 };
 
-const updateProfile = (req, res) => {
+const updateProfile = (req, res, next) => {
   const { name, about } = req.body;
 
   User.findByIdAndUpdate(req.user._id, { name, about }, { new: true, runValidators: true })
@@ -111,27 +110,27 @@ const updateProfile = (req, res) => {
     .then((user) => res.send(user))
     .catch((err) => {
       if (err instanceof CastError || err instanceof ValidationError) {
-        return res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные при обновлении профиля.' });
+        next(new BadRequest('Переданы некорректные данные при обновлении профиля.'));
       }
       if (err instanceof DocumentNotFoundError) {
-        return res.status(NOT_FOUND).send({ message: 'Пользователь с указанным _id не найден. ' });
+        next(new NotFound('Пользователь с указанным _id не найден.'));
       }
-      return res.status(INTERNAL_SERVER_ERROR).send({ message: 'Ошибка по умолчанию.' });
+      next(new InternalServerError('Ошибка по умолчанию.'));
     });
 };
 
-const updateAvatar = (req, res) => {
+const updateAvatar = (req, res, next) => {
   const { avatar } = req.body;
   User.findByIdAndUpdate(req.user._id, { avatar }, { new: true, runValidators: true })
     .then((user) => res.send(user))
     .catch((err) => {
       if (err instanceof CastError || err instanceof ValidationError) {
-        return res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные при обновлении аватара' });
+        next(new BadRequest('Переданы некорректные данные при обновлении аватара.'));
       }
       if (err instanceof DocumentNotFoundError) {
-        return res.status(NOT_FOUND).send({ message: 'Пользователь с указанным _id не найден.' });
+        next(new NotFound('Пользователь с указанным _id не найден.'));
       }
-      return res.status(INTERNAL_SERVER_ERROR).send({ message: 'Ошибка по умолчанию.' });
+      next(new InternalServerError('Ошибка по умолчанию.'));
     });
 };
 
