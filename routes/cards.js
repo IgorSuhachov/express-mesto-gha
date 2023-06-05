@@ -1,6 +1,8 @@
 const router = require('express').Router();
 
-const { getCard, createCard, deleteCard, setLike, removeLike } = require('../controllers/cards');
+const {
+  getCard, createCard, deleteCard, setLike, removeLike,
+} = require('../controllers/cards');
 
 const { authorization } = require('../middlewares/auth');
 const { createCardValidation, cardIdValidation } = require('../Utils/validation');
