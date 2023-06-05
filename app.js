@@ -11,10 +11,9 @@ app.use(express.json());
 app.use(cookieParser());
 
 app.use(router);
-app.use((err, req, res, next) => {
+app.use((err, req, res) => {
   const { statusCode = 500, message } = err;
   res.status(statusCode).send({ message: statusCode === 500 ? 'На сервере произошла ошибка' : message });
-  next();
 });
 
 mongoose

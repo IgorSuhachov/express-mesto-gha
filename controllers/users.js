@@ -46,9 +46,7 @@ const getUserById = (req, res, next) => {
 };
 
 const createUser = (req, res, next) => {
-  const {
-    name, about, avatar, password, email,
-  } = req.body;
+  const { name, about, avatar, password, email } = req.body;
 
   bcrypt.hash(password, 10).then((hash) => {
     User.create({
@@ -65,8 +63,9 @@ const createUser = (req, res, next) => {
       .catch((err) => {
         if (err instanceof ValidationError) {
           next(new BadRequest('Переданы некорректные данные при создании пользователя.'));
+        } else {
+          next(new InternalServerError('Ошибка по умолчанию.'));
         }
-        next(new InternalServerError('Ошибка по умолчанию.'));
       });
   });
 };
