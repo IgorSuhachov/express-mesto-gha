@@ -6,6 +6,7 @@ const User = require('../models/user');
 const BadRequest = require('../errors/BadRequest');
 const Unauthorized = require('../errors/Unauthorized');
 const NotFound = require('../errors/NotFound');
+const Conflict = require('../errors/Conflict');
 const InternalServerError = require('../errors/InternalServerError');
 
 const lifetime = 7 * 24 * 60 * 60 * 1000;
@@ -57,12 +58,13 @@ const createUser = (req, res, next) => {
       email,
     })
       .then((user) => {
-        const { id } = user;
-        res.status(201).send(name, about, avatar, email, id);
+        res.status(201).send(user);
       })
       .catch((err) => {
         if (err instanceof ValidationError) {
           next(new BadRequest('Переданы некорректные данные при создании пользователя.'));
+        } else if (err.code === 11000) {
+          next(new Conflict('Пользователь уже существует.'));
         } else {
           next(new InternalServerError('Ошибка по умолчанию.'));
         }
@@ -74,32 +76,32 @@ const login = (req, res, next) => {
   const { email, password } = req.body;
 
   User.findOne({ email })
+    .select('+password')
     .then((user) => {
       if (!user) {
-        throw new Error('Invalid email or password');
+        throw new BadRequest('Invalid email or password');
       }
 
-      bcrypt
-        .compare(password, user.password)
-        .then((matched) => {
-          if (matched) {
-            const token = jwt.sign({ _id: user._id }, 'SECRET_KEY');
-            res
-              .cookie('jwt', token, {
-                maxAge: lifetime,
-                httpOnly: true,
-              })
-              .send(user.toJSON());
-          } else {
-            throw new Error('Invalid email or password');
-          }
-        })
-        .catch((err) => {
-          res.send(err.message);
-        });
+      bcrypt.compare(password, user.password).then((matched) => {
+        if (matched) {
+          const token = jwt.sign({ _id: user._id }, 'SECRET_KEY');
+          res
+            .cookie('jwt', token, {
+              maxAge: lifetime,
+              httpOnly: true,
+            })
+            .send(user.toJSON());
+        } else {
+          throw new BadRequest('Invalid email or password');
+        }
+      });
     })
     .catch((err) => {
-      next(new Unauthorized(err.message));
+      if (err instanceof BadRequest) {
+        next(err);
+      } else {
+        next(new Unauthorized(err.message));
+      }
     });
 };
 
