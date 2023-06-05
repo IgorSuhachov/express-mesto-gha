@@ -4,7 +4,7 @@ const signUpValidation = celebrate({
   body: Joi.object().keys({
     name: Joi.string().min(2).max(30),
     about: Joi.string().min(2).max(30),
-    avatar: Joi.string().uri(),
+    avatar: Joi.string().regex(/^https?:\/\/.*$/),
     email: Joi.string().required().email(),
     password: Joi.string().required(),
   }),
@@ -25,14 +25,22 @@ const updateUserValidation = celebrate({
 });
 const updateAvatarValidation = celebrate({
   body: Joi.object().keys({
-    avatar: Joi.string().uri(),
+    avatar: Joi.string().regex(/^https?:\/\/.*$/),
   }),
 });
 
 const createCardValidation = celebrate({
   body: Joi.object().keys({
-    name: Joi.string().min(2).max(30),
-    link: Joi.string().required().uri(),
+    name: Joi.string().min(2).max(30).required(),
+    link: Joi.string()
+      .required()
+      .regex(/^https?:\/\/.*$/),
+  }),
+});
+
+const getUserIdValidation = celebrate({
+  body: Joi.object().keys({
+    userId: Joi.string().hex().length(24).required(),
   }),
 });
 
@@ -42,4 +50,5 @@ module.exports = {
   updateUserValidation,
   updateAvatarValidation,
   createCardValidation,
+  getUserIdValidation,
 };

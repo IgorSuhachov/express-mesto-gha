@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const validator = require('validator');
 const User = require('../models/user');
 
 const BadRequest = require('../errors/BadRequest');
@@ -75,11 +76,15 @@ const createUser = (req, res, next) => {
 const login = (req, res, next) => {
   const { email, password } = req.body;
 
+  if (!validator.isEmail(email)) {
+    throw new BadRequest('Переданы некорректные данные при создании пользователя.');
+  }
+
   User.findOne({ email })
     .select('+password')
     .then((user) => {
       if (!user) {
-        throw new BadRequest('Invalid email or password');
+        throw new Unauthorized('Invalid email or password');
       }
 
       bcrypt.compare(password, user.password).then((matched) => {
@@ -92,15 +97,15 @@ const login = (req, res, next) => {
             })
             .send(user.toJSON());
         } else {
-          throw new BadRequest('Invalid email or password');
+          throw new Unauthorized('Invalid email or password');
         }
       });
     })
     .catch((err) => {
-      if (err instanceof BadRequest) {
+      if (err instanceof Unauthorized) {
         next(err);
       } else {
-        next(new Unauthorized(err.message));
+        next(new BadRequest(err.message));
       }
     });
 };
