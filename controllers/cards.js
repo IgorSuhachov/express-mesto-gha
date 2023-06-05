@@ -29,9 +29,23 @@ const createCard = (req, res) => {
 };
 
 const deleteCard = (req, res) => {
-  Cards.findByIdAndRemove(req.params.cardId)
-    .orFail()
-    .then((card) => res.send(card))
+  const { cardId } = req.params;
+  const userId = req.user._id;
+  Cards.findById(cardId)
+    .then((card) => {
+      if (!card) {
+        return res.status(NOT_FOUND).send({ message: 'Карточка с указанным _id не найдена.' });
+      }
+      if (card.owner.toString() !== userId) {
+        return res.status(FORBIDDEN).send({ message: 'У вас нет прав на удаление карточки.' });
+      }
+
+      return Cards.findByIdAndRemove(cardId)
+        .then((removedCard) => {
+          res.send(removedCard);
+        })
+        .catch(() => res.status(INTERNAL_SERVER_ERROR).send({ message: 'Ошибка по умолчанию.' }));
+    })
     .catch((err) => {
       if (err instanceof CastError) {
         return res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные для удалении карточки.' });

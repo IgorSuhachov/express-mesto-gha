@@ -4,9 +4,9 @@ const { celebrate, Segments, Joi } = require('celebrate');
 const { getUser, getUserById, createUser, updateProfile, updateAvatar, getMe, login } = require('../controllers/users');
 const { authorization } = require('../middlewares/auth');
 
-router.get('/', getUser);
+router.get('/', authorization, getUser);
 router.get('/me', authorization, getMe);
-router.get('/:userId', getUserById);
+router.get('/:userId', authorization, getUserById);
 router.post('/', createUser);
 router.post('/signin', login);
 router.post(
@@ -21,7 +21,7 @@ router.post(
   }),
   createUser
 );
-router.patch('/me', updateProfile);
-router.patch('/me/avatar', updateAvatar);
+router.patch('/me', authorization, updateProfile);
+router.patch('/me/avatar', authorization, updateAvatar);
 
 module.exports = router;
