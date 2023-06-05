@@ -12,7 +12,7 @@ const signUpValidation = celebrate({
 
 const sigInValidation = celebrate({
   body: Joi.object().keys({
-    email: Joi.string().required(),
+    email: Joi.string().required().email(),
     password: Joi.string().required(),
   }),
 });
