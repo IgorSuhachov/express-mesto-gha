@@ -29,7 +29,7 @@ const getMe = (req, res, next) => {
         next(new NotFound('Пользователь не найден'));
       }
     })
-    .catch(() => next(new InternalServerError('Ошибка по умолчанию.')));
+    .catch(next);
 };
 
 const getUserById = (req, res, next) => {
@@ -38,12 +38,12 @@ const getUserById = (req, res, next) => {
     .then((user) => res.send(user))
     .catch((err) => {
       if (err instanceof CastError) {
-        next(new BadRequest('Переданы некорректные данные при получении пользователя.'));
+        return next(new BadRequest('Переданы некорректные данные при получении пользователя.'));
       }
       if (err instanceof DocumentNotFoundError) {
-        next(new NotFound('Пользователь по указанному _id не найден.'));
+        return next(new NotFound('Пользователь по указанному _id не найден.'));
       }
-      next(new InternalServerError('Ошибка по умолчанию.'));
+      return new InternalServerError('Ошибка по умолчанию.');
     });
 };
 
@@ -65,12 +65,12 @@ const createUser = (req, res, next) => {
       })
       .catch((err) => {
         if (err instanceof ValidationError) {
-          next(new BadRequest('Переданы некорректные данные при создании пользователя.'));
-        } else if (err.code === 11000) {
-          next(new Conflict('Пользователь уже существует.'));
-        } else {
-          next(new InternalServerError('Ошибка по умолчанию.'));
+          return next(new BadRequest('Переданы некорректные данные при создании пользователя.'));
         }
+        if (err.code === 11000) {
+          return next(new Conflict('Пользователь уже существует.'));
+        }
+        return next(new InternalServerError('Ошибка по умолчанию.'));
       });
   });
 };
@@ -89,26 +89,29 @@ const login = (req, res, next) => {
         throw new Unauthorized('Invalid email or password');
       }
 
-      bcrypt.compare(password, user.password).then((matched) => {
-        if (matched) {
-          const token = jwt.sign({ _id: user._id }, 'SECRET_KEY');
-          res
-            .cookie('jwt', token, {
-              maxAge: lifetime,
-              httpOnly: true,
-            })
-            .send(user.toJSON());
-        } else {
-          throw new Unauthorized('Invalid email or password');
-        }
-      });
+      bcrypt
+        .compare(password, user.password)
+        // eslint-disable-next-line consistent-return
+        .then((matched) => {
+          if (matched) {
+            const token = jwt.sign({ _id: user._id }, 'SECRET_KEY');
+            res
+              .cookie('jwt', token, {
+                maxAge: lifetime,
+                httpOnly: true,
+              })
+              .send(user.toJSON());
+          } else {
+            return next(new Unauthorized('Invalid email or password'));
+          }
+        })
+        .catch((err) => next(err));
     })
     .catch((err) => {
       if (err instanceof Unauthorized) {
         next(err);
-      } else {
-        next(new BadRequest(err.message));
       }
+      return next(new BadRequest(err.message));
     });
 };
 
@@ -120,12 +123,12 @@ const updateProfile = (req, res, next) => {
     .then((user) => res.send(user))
     .catch((err) => {
       if (err instanceof CastError || err instanceof ValidationError) {
-        next(new BadRequest('Переданы некорректные данные при обновлении профиля.'));
+        return next(new BadRequest('Переданы некорректные данные при обновлении профиля.'));
       }
       if (err instanceof DocumentNotFoundError) {
-        next(new NotFound('Пользователь с указанным _id не найден.'));
+        return next(new NotFound('Пользователь с указанным _id не найден.'));
       }
-      next(new InternalServerError('Ошибка по умолчанию.'));
+      return next(new InternalServerError('Ошибка по умолчанию.'));
     });
 };
 
@@ -135,12 +138,12 @@ const updateAvatar = (req, res, next) => {
     .then((user) => res.send(user))
     .catch((err) => {
       if (err instanceof CastError || err instanceof ValidationError) {
-        next(new BadRequest('Переданы некорректные данные при обновлении аватара.'));
+        return next(new BadRequest('Переданы некорректные данные при обновлении аватара.'));
       }
       if (err instanceof DocumentNotFoundError) {
-        next(new NotFound('Пользователь с указанным _id не найден.'));
+        return next(new NotFound('Пользователь с указанным _id не найден.'));
       }
-      next(new InternalServerError('Ошибка по умолчанию.'));
+      return next(new InternalServerError('Ошибка по умолчанию.'));
     });
 };
 

@@ -17,7 +17,6 @@ const getCard = (req, res, next) => {
 const createCard = (req, res, next) => {
   const { name, link } = req.body;
   const owner = req.user;
-  console.log(owner);
   Cards.create({ name, link, owner })
     .then((card) => res.status(201).send(card))
     .catch((err) => {
@@ -34,10 +33,10 @@ const deleteCard = (req, res, next) => {
   Cards.findById(cardId)
     .then((card) => {
       if (!card) {
-        next(new NotFound('Карточка с указанным _id не найдена.'));
+        return next(new NotFound('Карточка с указанным _id не найдена.'));
       }
       if (card.owner.toString() !== userId) {
-        next(new Forbidden('У вас нет прав на удаление карточки.'));
+        return next(new Forbidden('У вас нет прав на удаление карточки.'));
       }
 
       return Cards.findByIdAndRemove(cardId)
@@ -48,12 +47,12 @@ const deleteCard = (req, res, next) => {
     })
     .catch((err) => {
       if (err instanceof CastError) {
-        next(new BadRequest('Переданы некорректные данные при создании карточки.'));
+        return next(new BadRequest('Переданы некорректные данные при создании карточки.'));
       }
       if (err instanceof DocumentNotFoundError) {
-        next(new NotFound('Карточка с указанным _id не найдена.'));
+        return next(new NotFound('Карточка с указанным _id не найдена.'));
       }
-      next(new InternalServerError('Ошибка по умолчанию.'));
+      return next(new InternalServerError('Ошибка по умолчанию.'));
     });
 };
 
