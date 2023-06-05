@@ -2,6 +2,9 @@ const { celebrate, Joi } = require('celebrate');
 
 const signUpValidation = celebrate({
   body: Joi.object().keys({
+    name: Joi.string().min(2).max(30),
+    about: Joi.string().min(2).max(30),
+    avatar: Joi.string().uri(),
     email: Joi.string().required(),
     password: Joi.string().required(),
   }),
@@ -9,9 +12,6 @@ const signUpValidation = celebrate({
 
 const sigInValidation = celebrate({
   body: Joi.object().keys({
-    name: Joi.string().min(2).max(30),
-    about: Joi.string().min(2).max(30),
-    avatar: Joi.string().uri(),
     email: Joi.string().required(),
     password: Joi.string().required(),
   }),
